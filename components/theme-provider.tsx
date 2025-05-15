@@ -1,11 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import {
-  ThemeProvider as NextThemesProvider,
-  type ThemeProviderProps,
-} from 'next-themes'
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+// Lightweight passthrough — app uses a fixed dark theme, no dynamic switching needed.
+export function ThemeProvider({ children }: { children: React.ReactNode;[key: string]: unknown }) {
+  return <>{children}</>
 }

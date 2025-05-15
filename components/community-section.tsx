@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -60,7 +60,7 @@ export function CommunitySection() {
       )
 
       // Holi festival particle effect
-      const particles = gsap.utils.toArray(".holi-particle")
+      const particles = gsap.utils.toArray<Element>(".holi-particle")
       particles.forEach((particle) => {
         gsap.fromTo(
           particle,
@@ -87,25 +87,37 @@ export function CommunitySection() {
     return () => ctx.revert()
   }, [])
 
-  // Generate Holi festival particles
-  const holiParticles = Array.from({ length: 20 }).map((_, index) => {
+  // Generate Holi festival particles with stable, seeded values to avoid SSR/client hydration mismatch.
+  // Using a deterministic pseudo-random function (seeded by index) so both server and client
+  // produce the exact same sizes and colors.
+  const holiParticles = useMemo(() => {
     const colors = ["#FF5722", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5", "#2196F3", "#03A9F4", "#00BCD4"]
-    const size = Math.floor(Math.random() * 20) + 10
 
-    return (
-      <div
-        key={index}
-        className="holi-particle absolute rounded-full"
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          top: "50%",
-          left: "50%",
-        }}
-      ></div>
-    )
-  })
+    // Simple deterministic pseudo-random based on seed (no Math.random())
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed + 1) * 10000
+      return x - Math.floor(x)
+    }
+
+    return Array.from({ length: 20 }).map((_, index) => {
+      const size = Math.floor(seededRandom(index * 2) * 20) + 10
+      const color = colors[Math.floor(seededRandom(index * 2 + 1) * colors.length)]
+
+      return (
+        <div
+          key={index}
+          className="holi-particle absolute rounded-full"
+          style={{
+            width: `${size}px`,
+            height: `${size}px`,
+            backgroundColor: color,
+            top: "50%",
+            left: "50%",
+          }}
+        ></div>
+      )
+    })
+  }, [])
 
   return (
     <section
